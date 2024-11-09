@@ -1,2 +1,2 @@
-﻿# Instragram-nlp
-A simple project that analyzes Instagram data to predict impressions based on post captions and hashtags.
+﻿# Instragram-analyze
+A simple project that analyzes Instagram data and try to preidct some meaningful insights
