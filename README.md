@@ -48,6 +48,6 @@ pip install -r requirements.txt
 
 ## Future Work
 
-- **Imporve models**: Improve model's prediction score.
+- **Imporve models**: Improve model's performance.
 - **Experiment with Models**: Test advanced transformer-based architectures for text analysis
 - **Deploy Models**: Develop an interactive dashboard for real-time prediction and trend analysis
