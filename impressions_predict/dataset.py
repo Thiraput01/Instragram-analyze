@@ -13,29 +13,28 @@ model = AutoModel.from_pretrained("BAAI/bge-base-en-v1.5")
 class InstagramDataset(Dataset):
     def __init__(self, dataframe):
         self.dataframe = dataframe
-        self.tokenizer = tokenizer
+        self.tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-base-en-v1.5")
 
     def __len__(self):
         return len(self.dataframe)
 
     def __getitem__(self, idx):
         
-        # Get caption and hashtags
+        # Retrieve the caption, hashtags, and label for the given index
         caption = self.dataframe.iloc[idx]['Caption']
         hashtags = self.dataframe.iloc[idx]['Hashtags keywords']
-        
-        # tokenize the caption and hashtags
+        label = torch.tensor(self.dataframe.iloc[idx]['Impressions'], dtype=torch.float32)
+
+        # Tokenize and return the raw tokenized inputs
         caption_tokens = self.tokenizer(caption, return_tensors='pt', padding='max_length', truncation=True, max_length=128)
         hashtags_tokens = self.tokenizer(hashtags, return_tensors='pt', padding='max_length', truncation=True, max_length=128)
-        
-        # embed the caption and hashtags
+
+        # Embed the caption and hashtags using the model
         with torch.no_grad():
-            caption_embedding = model(**caption_tokens).last_hidden_state.mean(dim=1)
-            hashtags_embedding = model(**hashtags_tokens).last_hidden_state.mean(dim=1)
+            caption_embeddings = model(**caption_tokens).last_hidden_state.mean(dim=1)
+            hashtags_embeddings = model(**hashtags_tokens).last_hidden_state.mean(dim=1)
             
-        # concatenate the embeddings
-        embedding = torch.cat((caption_embedding, hashtags_embedding), dim=1).squeeze(0)
+        # Concatenate the embeddings
+        embeddings = torch.cat([caption_embeddings, hashtags_embeddings], dim=1)
         
-        label = torch.tensor(self.dataframe.iloc[idx]['Impressions'], dtype=torch.float32)
-        
-        return embedding, label # embedding dim = 768*2 = 1536
+        return embeddings, label

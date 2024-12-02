@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import AutoTokenizer, AutoModel
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-from torch.optim import Adam
+from torch.optim import Adam, RMSprop
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 import torch.nn as nn
@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 batch_size = 8
-epochs = 20
-lr = 0.001
+epochs = 50
+lr = 0.005
 
 # Load the data
 df = pd.read_csv('../data/df_for_nlp.csv')
@@ -54,7 +54,9 @@ model = Model(input_dim=1536)
 model = model.to(device)
 
 # Set optimizer and loss function
+# optimizer = RMSprop(model.parameters(), lr=lr)
 optimizer = Adam(model.parameters(), lr=lr)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.2)
 criterion = nn.MSELoss() # For regression tasks
 # Modify the train_model function to store losses
 def train_model(train_dataloader, val_dataloader, model, epochs=epochs):
@@ -84,6 +86,8 @@ def train_model(train_dataloader, val_dataloader, model, epochs=epochs):
 
             running_loss += loss.item()
 
+        scheduler.step()  # Step the scheduler
+        
         # Store the training loss for this epoch
         train_losses.append(running_loss / len(train_dataloader))
 
@@ -120,11 +124,14 @@ def train_model(train_dataloader, val_dataloader, model, epochs=epochs):
 # Function to plot the training and validation loss
 def plot_loss_graph(train_losses, val_losses):
     plt.figure(figsize=(10, 6))
-    plt.plot(train_losses, label='Training Loss', color='blue')
-    plt.plot(val_losses, label='Validation Loss', color='red')
+    # Filter losses to only include those less than 1
+    filtered_train_losses = [loss for loss in train_losses if loss < 1]
+    filtered_val_losses = [loss for loss in val_losses if loss < 1]
+    plt.plot(filtered_train_losses, label='Training Loss', color='blue')
+    plt.plot(filtered_val_losses, label='Validation Loss', color='red')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.title('Training and Validation Loss Over Epochs')
+    plt.title('Training and Validation Loss Over Epochs (Loss < 1)')
     plt.legend()
     plt.grid(True)
     plt.show()

@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.functional import F
 
 class Model(nn.Module):
     def __init__(self, input_dim):
@@ -10,6 +11,7 @@ class Model(nn.Module):
         self.fc4 = nn.Linear(64, 1)
 
     def forward(self, x):
+        x = F.normalize(x, p=2, dim=1)
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         x = torch.relu(self.fc3(x))
